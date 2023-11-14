@@ -16,9 +16,6 @@ from collections import deque
 # Очередь клиентов
 queue = deque()
 
-is_swapping = False
-
-
 
 # Встать в очередь
 async def enqueue(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -56,21 +53,34 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
 
     if user in queue:
-        is_swapping = True
-        current_queue = [f'{i+1}. {user.first_name} - @{user.username}' for i, user in enumerate(queue)]
-        await update.message.reply_text(type(current_queue[0]).__name__)
+        current_queue = [f'@{user.username}' for i, user in enumerate(queue)]
+        #await update.message.reply_text(type(current_queue[0]).__name__)
     else:
         await update.message.reply_text('Вы не в очереди.')
-    reply_keyboard =   [current_queue]#[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+
+    
+    
+    reply_keyboard =   [current_queue] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
     await update.message.reply_text(f'С кем бы вы хотели поменяться?', reply_markup=markup)
+
+# Команда start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    username = update.message.from_user.first_name
+
+    reply_keyboard = [commands]#[[commands[0], commands[1]], [commands[2]], [commands[3]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
+
+    await update.message.reply_text(f'Привет, {username}! Чего бы вы хотели?', reply_markup=markup)
+
 
 TEXT_HANDLERS = {
     '👉Вступить в очередь👉': enqueue,
     '👈Покинуть очередь👈': dequeue,
     '💀Увидеть очередь и умереть💀': status,
-    '👉👈Поменяться местами👉👈' : swap_request
+    '👉👈Поменяться местами👉👈' : swap_request,
+    'Обновить' : start
 }
 
 commands = list(TEXT_HANDLERS.keys())
@@ -87,24 +97,39 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if handler:
         await handler(update, context)
+    elif text.startswith('@'):
+        
+
+        current_user = update.message.from_user
+        current_user_index = queue.index(current_user)
+
+        #await update.message.reply_text(f'current_user_index = {queue.index(current_user)}')
+        
+        for i, user in enumerate(queue):
+            if text == '@' + user.username:
+                #await update.message.reply_text(f'i = {i}')
+                #await update.message.reply_text(f'i[] 1 = {queue[i].username}')
+                if i < current_user_index:
+                    await update.message.reply_text("Ты охуел?")
+                    break
+                queue[i], queue[current_user_index] = current_user, queue[i]
+            else:
+                await update.message.reply_text("Не найден")
+
+        current_queue = [f'{i+1}. {user.first_name} - @{user.username}' for i, user in enumerate(queue)]
+        await update.message.reply_text('\n'.join(current_queue))
+
     else:
-        if (text == "Кто нахуй?" and not is_swapping):
+        if (text == "Кто нахуй?"):
             await update.message.reply_text('Я нахуй!')
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+    
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Шо я не понял?")
 
 
-# Команда start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username = update.message.from_user.first_name
-
-    reply_keyboard = [[commands[0], commands[1]], [commands[2]], [commands[3]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
-
-    await update.message.reply_text(f'Привет, {username}! Чего бы вы хотели?', reply_markup=markup)
 
 
 if __name__ == '__main__':
