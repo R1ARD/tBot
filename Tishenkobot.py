@@ -86,15 +86,15 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user in queue:
         current_queue = []
         for i, user in enumerate(queue):
-            current_queue.append([['@' + user.username]])
+            current_queue.append(['@' + user.username])
         #current_queue = [f['@{user.username}'] for i, user in enumerate(queue)]
         #await update.message.reply_text(type(current_queue[0]).__name__)
     else:
         await update.message.reply_text('Вы не в очереди.')
 
-    await update.message.reply_text(current_queue)
+    #await update.message.reply_text(current_queue)
     
-    reply_keyboard =   current_queue #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+    reply_keyboard = current_queue #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
     
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
@@ -136,7 +136,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text.startswith('@'):
         current_user = update.message.from_user
         
-        if current_user in queue and queue:
+        if queue:
             current_user_index = queue.index(current_user)
             #await update.message.reply_text(f'current_user_index = {queue.index(current_user)}')
             for i, user in enumerate(queue):
@@ -147,13 +147,13 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         await update.message.reply_text("Ты охуел?")
                         break
                     queue[i], queue[current_user_index] = current_user, user
-                    start(update, context)
+            
         else:
                 await update.message.reply_text("Не найден")
-
+        
         current_queue = [f'{i+1}. {user.first_name} - @{user.username}' for i, user in enumerate(queue)]
         await update.message.reply_text('\n'.join(current_queue))
-
+        start(update, context)
     else:
         if (text == "Кто нахуй?"):
             await update.message.reply_text('Я нахуй!')
