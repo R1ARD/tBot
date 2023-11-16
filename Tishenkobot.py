@@ -80,8 +80,25 @@ async def swap(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif swap_position == user_position:
         await update.message.reply_text('З О Ч Е М ?')
 
-async def swap_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Используйте: /swap <номер в очереди>. Кнопки я пока выпилил')
+async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+
+    if user in queue:
+        current_queue = []
+        for i, user in enumerate(queue):
+            current_queue.append([['@' + user.username]])
+        #current_queue = [f['@{user.username}'] for i, user in enumerate(queue)]
+        #await update.message.reply_text(type(current_queue[0]).__name__)
+    else:
+        await update.message.reply_text('Вы не в очереди.')
+
+    await update.message.reply_text(current_queue)
+    
+    reply_keyboard =   current_queue #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+    
+    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
+
+    await update.message.reply_text(f'С кем бы вы хотели поменяться?', reply_markup=markup)
 
 # Команда start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -97,7 +114,7 @@ TEXT_HANDLERS = {
     '👉Вступить в очередь👉': enqueue,
     '👈Покинуть очередь👈': dequeue,
     '💀Увидеть очередь и умереть💀': status,
-    '👉👈Поменяться местами👉👈' : swap_help,
+    '👉👈Поменяться местами👉👈' : swap_request,
     '🔄Обновить🔄' : start
 }
 
@@ -145,13 +162,15 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Чито я не понял?")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Шо я не понял?")
 
 
 
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token('6878650923:AAGz0mV5QlnzC2WtClIldVx66fo4qwm6VXI').build()
+
+    #nick = 
 
     start_handler = CommandHandler('start', start)
 
