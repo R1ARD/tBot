@@ -51,8 +51,8 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def swap(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Разбор аргументов команды
-    if update.args:
-        args = update.args
+    if context.args:
+        args = context.args
     else:
         await update.message.reply_text('Используйте: /swap <номер в очереди>')
     if len(args) != 1:
