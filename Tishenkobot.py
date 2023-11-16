@@ -16,16 +16,20 @@ from collections import deque
 # Очередь клиентов
 queue = deque()
 
+ban_list = ['herbatalove']
+
 
 # Встать в очередь
 async def enqueue(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
-    if user not in queue:
-        queue.append(user)
-        await update.message.reply_text(f'Вы встали в очередь.')
+    if user.username not in ban_list:
+        if user not in queue:
+            queue.append(user)
+            await update.message.reply_text(f'Вы встали в очередь.')
+        else:
+            await update.message.reply_text('Вы уже в очереди.')
     else:
-        await update.message.reply_text('Вы уже в очереди.')
-
+        await update.message.reply_text('БАН НАХУЙ')
 # Покинуть очередь
 async def dequeue(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
@@ -87,8 +91,6 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_queue = []
         for i, user in enumerate(queue):
             current_queue.append(['@' + user.username])
-        #current_queue = [f['@{user.username}'] for i, user in enumerate(queue)]
-        #await update.message.reply_text(type(current_queue[0]).__name__)
     else:
         await update.message.reply_text('Вы не в очереди.')
 
@@ -105,7 +107,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.message.from_user.first_name
 
     reply_keyboard = [[commands[0], commands[1]], [commands[2]], [commands[3]], [commands[4]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
+    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
     await update.message.reply_text(f'Привет, {username}! Чего бы вы хотели?', reply_markup=markup)
 
@@ -151,9 +153,8 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
                 await update.message.reply_text("Не найден")
         
-        current_queue = [f'{i+1}. {user.first_name} - @{user.username}' for i, user in enumerate(queue)]
-        await update.message.reply_text('\n'.join(current_queue))
-        start(update, context)
+        await status(update, context)
+        await start(update, context)
     else:
         if (text == "Кто нахуй?"):
             await update.message.reply_text('Я нахуй!')
