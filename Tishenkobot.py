@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, Bot, ReplyKeyboardMarkup, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from collections import deque
 
 import random
@@ -53,7 +53,7 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
 
     if user in queue:
-        current_queue = [f'@{user.username}' for i, user in enumerate(queue)]
+        current_queue = [f['@{user.username}'] for i, user in enumerate(queue)]
         #await update.message.reply_text(type(current_queue[0]).__name__)
     else:
         await update.message.reply_text('Вы не в очереди.')
@@ -61,7 +61,7 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     
     reply_keyboard =   [current_queue] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+    markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=True)
 
     await update.message.reply_text(f'С кем бы вы хотели поменяться?', reply_markup=markup)
 
@@ -69,7 +69,7 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.message.from_user.first_name
 
-    reply_keyboard = [commands]#[[commands[0], commands[1]], [commands[2]], [commands[3]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+    reply_keyboard = [[commands[0], commands[1]], [commands[2]], [commands[3]], [commands[4]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 
     await update.message.reply_text(f'Привет, {username}! Чего бы вы хотели?', reply_markup=markup)
@@ -80,7 +80,7 @@ TEXT_HANDLERS = {
     '👈Покинуть очередь👈': dequeue,
     '💀Увидеть очередь и умереть💀': status,
     '👉👈Поменяться местами👉👈' : swap_request,
-    'Обновить' : start
+    '🔄Обновить🔄' : start
 }
 
 commands = list(TEXT_HANDLERS.keys())
@@ -94,26 +94,26 @@ async def user_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     handler = TEXT_HANDLERS.get(text)
+    
 
     if handler:
         await handler(update, context)
     elif text.startswith('@'):
-        
-
         current_user = update.message.from_user
-        current_user_index = queue.index(current_user)
-
-        #await update.message.reply_text(f'current_user_index = {queue.index(current_user)}')
         
-        for i, user in enumerate(queue):
-            if text == '@' + user.username:
-                #await update.message.reply_text(f'i = {i}')
-                #await update.message.reply_text(f'i[] 1 = {queue[i].username}')
-                if i < current_user_index:
-                    await update.message.reply_text("Ты охуел?")
-                    break
-                queue[i], queue[current_user_index] = current_user, queue[i]
-            else:
+        if current_user in queue and queue:
+            current_user_index = queue.index(current_user)
+            #await update.message.reply_text(f'current_user_index = {queue.index(current_user)}')
+            for i, user in enumerate(queue):
+                if text == '@' + user.username:
+                    #await update.message.reply_text(f'i = {i}')
+                    #await update.message.reply_text(f'i[] 1 = {queue[i].username}')
+                    if i < current_user_index and current_user.username != 'riardd':
+                        await update.message.reply_text("Ты охуел?")
+                        break
+                    queue[i], queue[current_user_index] = current_user, user
+                    start(update, context)
+        else:
                 await update.message.reply_text("Не найден")
 
         current_queue = [f'{i+1}. {user.first_name} - @{user.username}' for i, user in enumerate(queue)]
