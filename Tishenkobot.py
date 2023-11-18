@@ -2,7 +2,7 @@ import logging
 from telegram import Update, Bot, ReplyKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from collections import deque
-
+from random import choice
 import random
 
 logging.basicConfig(
@@ -10,13 +10,18 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-
-from collections import deque
-
 # Очередь клиентов
 queue = deque()
 
 ban_list = ['herbatalove']
+
+quotes = ['цитата1',
+          'цитата2',
+          'цитата3',
+          'цитата4',
+          'цитата5',
+          'цитата6',
+          'цитата7',]
 
 
 # Встать в очередь
@@ -102,31 +107,31 @@ async def swap_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f'С кем бы вы хотели поменяться?', reply_markup=markup)
 
+
+async def quote(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(choice(quotes))
+
 # Команда start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.message.from_user.first_name
 
-    reply_keyboard = [[commands[0], commands[1]], [commands[2]], [commands[3]], [commands[4]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
+    reply_keyboard = [[commands[0], commands[1]], [commands[2]], [commands[3]], [commands[4]], [commands[5]]] #[['👉Вступить в очередь👉', '👈Покинуть очередь👈'], ['💀Увидеть очередь и умереть💀']]
     markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True, one_time_keyboard=False)
 
     await update.message.reply_text(f'Привет, {username}! Чего бы вы хотели?', reply_markup=markup)
-
 
 TEXT_HANDLERS = {
     '👉Вступить в очередь👉': enqueue,
     '👈Покинуть очередь👈': dequeue,
     '💀Увидеть очередь и умереть💀': status,
     '👉👈Поменяться местами👉👈' : swap_request,
+    '💬Цитата💬' : quote,
     '🔄Обновить🔄' : start
 }
 
 commands = list(TEXT_HANDLERS.keys())
 
 
-
-async def user_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username = update.message.from_user.first_name
-    await update.message.reply_text(f'Дарова, {username}! Чего бы вы хотели?')
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -181,7 +186,6 @@ if __name__ == '__main__':
     
     status_handler = CommandHandler('status', status)
 
-    user_handler = MessageHandler(filters.USER & (~filters.COMMAND), user_check)
     echo_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), echo)
     unknown_handler = MessageHandler(filters.COMMAND, unknown)
 
